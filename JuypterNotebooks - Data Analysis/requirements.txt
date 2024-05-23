@@ -1,0 +1,7 @@
+numpy
+ipython
+geopy
+matplotlib
+pandas
+seaborn
+pysal
