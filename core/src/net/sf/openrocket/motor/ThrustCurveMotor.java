@@ -1,5 +1,8 @@
 package net.sf.openrocket.motor;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.text.Collator;
 import java.util.Arrays;
@@ -272,6 +275,27 @@ public class ThrustCurveMotor implements Motor, Comparable<ThrustCurveMotor>, Se
 	 */
 	public double[] getTimePoints() {
 		return time.clone();
+	}
+
+	public void writeThrust() {
+		try {
+			FileWriter fileWriter = new FileWriter("/Users/jaisharma/Documents/thrust.txt");
+			PrintWriter printWriter = new PrintWriter(fileWriter);
+
+			for(double t: thrust){
+				printWriter.println(t);
+			}
+
+			printWriter.close();
+			fileWriter.close();
+		}
+		catch (IOException e) {
+			System.out.println("An error occurred: " + e.getMessage());
+			e.printStackTrace();
+		}
+		for(double t: thrust){
+			System.out.println(t);
+		}
 	}
 	
 	/* 

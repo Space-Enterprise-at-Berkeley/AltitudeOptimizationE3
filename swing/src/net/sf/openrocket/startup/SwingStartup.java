@@ -175,7 +175,6 @@ public class SwingStartup {
 	 * @param args	command line arguments
 	 */
 	private void runInEDT(String[] args) {
-		
 		// Initialize the splash screen with version info
 		log.info("Initializing the splash screen");
 		Splash.init();

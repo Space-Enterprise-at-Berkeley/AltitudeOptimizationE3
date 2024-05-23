@@ -182,7 +182,11 @@ public abstract class AbstractSimulationStepper implements SimulationStepper {
 		thrust = 0;
 		Collection<MotorClusterState> activeMotorList = status.getActiveMotors();
 		for (MotorClusterState currentMotorState : activeMotorList ) {
-			thrust += currentMotorState.getThrust( status.getSimulationTime() );
+			// JAI SHARMA
+//			thrust += currentMotorState.getThrust( status.getSimulationTime() );
+			if (status.getSimulationTime() < 10){
+				thrust = 10;
+			}
 		}
 		
 		// Post-listeners

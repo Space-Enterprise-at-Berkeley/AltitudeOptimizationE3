@@ -183,7 +183,7 @@ public class RASPMotorLoader extends AbstractMotorLoader {
 	 * Create a motor from RASP file data.
 	 * @throws IOException  if the data is illegal for a thrust curve
 	 */
-	private static ThrustCurveMotor.Builder createRASPMotor(String manufacturer, String designation,
+	public static ThrustCurveMotor.Builder createRASPMotor(String manufacturer, String designation,
 			String comment, double length, double diameter, double[] delays,
 			double propW, double totalW, List<Double> time, List<Double> thrust, boolean removeDelayFromDesignation)
 			throws IOException {

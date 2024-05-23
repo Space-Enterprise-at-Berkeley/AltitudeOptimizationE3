@@ -1,10 +1,15 @@
 package net.sf.openrocket.document;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.EventListener;
 import java.util.EventObject;
 import java.util.List;
 
+import net.sf.openrocket.file.motor.RASPMotorLoader;
+import net.sf.openrocket.motor.MotorConfiguration;
+import net.sf.openrocket.motor.ThrustCurveMotor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +39,8 @@ import net.sf.openrocket.util.BugException;
 import net.sf.openrocket.util.ChangeSource;
 import net.sf.openrocket.util.SafetyMutex;
 import net.sf.openrocket.util.StateChangeListener;
+
+
 
 /**
  * A class defining a simulation, its conditions and simulated data.
@@ -429,14 +436,27 @@ public class Simulation implements ChangeSource, Cloneable {
 			long t1, t2;
 			log.debug("Simulation: calling simulator");
 			t1 = System.currentTimeMillis();
+			double totalImpulse = 200000.0;
+			double burnTime = 1.0;
+			List<Double> thrust = new ArrayList<>(Arrays.asList(totalImpulse/burnTime,totalImpulse/burnTime));
+			List<Double> time = new ArrayList<>(Arrays.asList(0.0, burnTime));
+			double [] delay = {Double.MAX_VALUE};
+			ThrustCurveMotor.Builder builder =  RASPMotorLoader.createRASPMotor("seb", "",
+					"",4.0, 0.2, delay,
+					115, 115.000001, time, thrust, true);
+			ThrustCurveMotor motorTemp = builder.build();
+//			simulationConditions.getSimulation().getRocket().getSelectedConfiguration().getActiveMotors().iterator().next().setMotor(motorTemp);
 			simulatedData = simulator.simulate(simulationConditions);
+
 			t2 = System.currentTimeMillis();
 			log.debug("Simulation: returning from simulator, simulation took " + (t2 - t1) + "ms");
 
 		} catch (SimulationException e) {
 			simulatedData = e.getFlightData();
 			throw e;
-		} finally {
+		} catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
 			// Set simulated info after simulation
 			simulatedConditions = options.clone();
 			simulatedConfigurationDescription = descriptor.format( this.rocket, getId());
