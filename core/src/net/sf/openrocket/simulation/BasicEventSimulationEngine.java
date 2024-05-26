@@ -172,8 +172,8 @@ public class BasicEventSimulationEngine implements SimulationEngine {
 			// Start the simulation
 			while (handleEvents()) {
 				double thrust = ((ArrayList<MotorClusterState>) currentStatus.getActiveMotors()).get(0).getThrust(currentStatus.getSimulationTime());
-				System.out.println(thrust);
-				System.out.println(currentStatus.getRocketPosition().z);
+//				System.out.println(thrust);
+//				System.out.println(currentStatus.getRocketPosition().z);
 				// Take the step
 				double oldAlt = currentStatus.getRocketPosition().z;
 

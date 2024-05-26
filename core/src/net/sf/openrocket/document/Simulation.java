@@ -436,16 +436,50 @@ public class Simulation implements ChangeSource, Cloneable {
 			long t1, t2;
 			log.debug("Simulation: calling simulator");
 			t1 = System.currentTimeMillis();
+
+
+			// JAI SHARMA
 			double totalImpulse = 200000.0;
-			double burnTime = 1.0;
-			List<Double> thrust = new ArrayList<>(Arrays.asList(totalImpulse/burnTime,totalImpulse/burnTime));
-			List<Double> time = new ArrayList<>(Arrays.asList(0.0, burnTime));
+
+			double initThrust = 8000.0;
+			// 2, 2000
+			// initThrust: [2000, 50000]
+			// timeChange: [0, totalImpulse / initThrust]
+			// newThrust: [1000, initThrust]
+			double timeChange = 0.0;
+			double newThrust = 5000.0;
+
+			double epsilon = Math.pow(10,-6);
+			List<Double> thrust = new ArrayList<>();
+			List<Double> time = new ArrayList<>();
+
+			double remainingImpulse = totalImpulse - initThrust * timeChange;
+			double finalTime = timeChange + remainingImpulse / newThrust + epsilon;
+			// double maxBurnTime = 1000.0;
+
+			thrust.add(initThrust);
+			thrust.add(initThrust);
+			thrust.add(newThrust);
+			thrust.add(newThrust);
+			thrust.add(0.0);
+
+			time.add(0.0);
+			time.add(timeChange);
+			time.add(timeChange + epsilon);
+			time.add(finalTime);
+			time.add(finalTime+epsilon);
+
+
+			System.out.println(time);
+			System.out.println(thrust);
+			System.out.println(finalTime);
+
 			double [] delay = {Double.MAX_VALUE};
 			ThrustCurveMotor.Builder builder =  RASPMotorLoader.createRASPMotor("seb", "",
 					"",4.0, 0.2, delay,
 					115, 115.000001, time, thrust, true);
 			ThrustCurveMotor motorTemp = builder.build();
-//			simulationConditions.getSimulation().getRocket().getSelectedConfiguration().getActiveMotors().iterator().next().setMotor(motorTemp);
+			simulationConditions.getSimulation().getRocket().getSelectedConfiguration().getActiveMotors().iterator().next().setMotor(motorTemp);
 			simulatedData = simulator.simulate(simulationConditions);
 
 			t2 = System.currentTimeMillis();
