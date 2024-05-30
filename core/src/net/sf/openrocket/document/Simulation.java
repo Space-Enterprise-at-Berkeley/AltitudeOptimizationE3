@@ -40,6 +40,7 @@ import net.sf.openrocket.util.ChangeSource;
 import net.sf.openrocket.util.SafetyMutex;
 import net.sf.openrocket.util.StateChangeListener;
 
+import javax.swing.*;
 
 
 /**
@@ -52,7 +53,7 @@ import net.sf.openrocket.util.StateChangeListener;
  */
 public class Simulation implements ChangeSource, Cloneable {
 	private static final Logger log = LoggerFactory.getLogger(Simulation.class);
-	
+	private FlightData flightSummary;
 	public static enum Status {
 		/** Up-to-date */
 		UPTODATE,
@@ -439,6 +440,7 @@ public class Simulation implements ChangeSource, Cloneable {
 
 
 			// JAI SHARMA
+			//
 			double totalImpulse = 200000.0;
 
 			double initThrust = 8000.0;
@@ -446,41 +448,114 @@ public class Simulation implements ChangeSource, Cloneable {
 			// initThrust: [2000, 50000]
 			// timeChange: [0, totalImpulse / initThrust]
 			// newThrust: [1000, initThrust]
-			double timeChange = 0.0;
+			double timeChange = 2.0;
 			double newThrust = 5000.0;
 
 			double epsilon = Math.pow(10,-6);
-			List<Double> thrust = new ArrayList<>();
-			List<Double> time = new ArrayList<>();
 
-			double remainingImpulse = totalImpulse - initThrust * timeChange;
-			double finalTime = timeChange + remainingImpulse / newThrust + epsilon;
+
+
+			List<Double> finalTC= new ArrayList<>();
+			List<Double> finalIT= new ArrayList<>();
+			List<Double> finalFT= new ArrayList<>();
+			List<Double> apogees= new ArrayList<>();
 			// double maxBurnTime = 1000.0;
+			for (int it=2000;it<=50000;it+=1000){
+				//System.out.print("it: "+it);
+				//initial thrust values from 2000 to 50,000
+				for (int ft=1000;ft<=it;ft+=100){
+					//System.out.print("ft: "+ft);
+					//final thrust values from 1000 to initial thrust (no change)
+					for (int tc=1;tc<=totalImpulse/it;tc+=1) {
+						//System.out.print("tc: "+tc);
+						//it*tc will give impulse 1
+						//totalImpulse/it -tc *ft will give impulse 2
+						double impulse1 = tc * it;
+						double impulse2 = totalImpulse-impulse1;
+						if (Math.abs((impulse1 + impulse2) - totalImpulse) < epsilon) {
 
-			thrust.add(initThrust);
-			thrust.add(initThrust);
-			thrust.add(newThrust);
-			thrust.add(newThrust);
-			thrust.add(0.0);
+							initThrust = (double) it;
+							newThrust = (double) ft;
+							timeChange = (double) tc;
+							List<Double> thrust = new ArrayList<>();
+							List<Double> time = new ArrayList<>();
+							double remainingImpulse = totalImpulse - initThrust * timeChange;
+							double finalTime = timeChange + remainingImpulse / newThrust + epsilon;
 
-			time.add(0.0);
-			time.add(timeChange);
-			time.add(timeChange + epsilon);
-			time.add(finalTime);
-			time.add(finalTime+epsilon);
+							thrust.add(initThrust);
+							thrust.add(initThrust);
+							thrust.add(newThrust);
+							thrust.add(newThrust);
+							//thrust.add(0.0);
+
+							time.add(0.0);
+							time.add(timeChange);
+							time.add(timeChange + epsilon);
+							time.add(finalTime);
+							//time.add(finalTime + epsilon);
+							finalIT.add(initThrust);
+							finalFT.add(newThrust);
+							finalTC.add(timeChange);
 
 
-			System.out.println(time);
-			System.out.println(thrust);
-			System.out.println(finalTime);
+							double[] delay = {Double.MAX_VALUE};
+							ThrustCurveMotor.Builder builder = RASPMotorLoader.createRASPMotor("seb", "",
+									"", 4.0, 0.2, delay,
+									115, 115.000001, time, thrust, true);
+							ThrustCurveMotor motorTemp = builder.build();
+							simulationConditions.getSimulation().getRocket().getSelectedConfiguration().getActiveMotors().iterator().next().setMotor(motorTemp);
+							simulatedData = simulator.simulate(simulationConditions);
+							apogees.add(simulatedData.getMaxAltitude());
 
-			double [] delay = {Double.MAX_VALUE};
+
+						}
+					}
+				}
+
+			}
+			//System.out.print(apogees);
+			int rows=apogees.toArray().length;
+			Object[][] data2DArray = new Object[rows][4];
+
+			// Populate the 2D array
+			for (int i = 0; i < rows; i++) {
+				data2DArray[i][0] = finalIT.get(i);
+				data2DArray[i][1] = finalFT.get(i);
+				data2DArray[i][2] = finalTC.get(i);
+				data2DArray[i][3] = apogees.get(i);
+			}
+
+			//System.out.print(data2DArray);
+
+			String[] columnNames= {"Initial Thrust","Final Thrust","Time of Change","Apogee"};
+			JTable tableData = new JTable(data2DArray, columnNames);
+			tableData.setBounds(30, 40, 200, 300);
+
+				//Sets up table details
+			JFrame frame = new JFrame();
+
+				// Frame Title
+			frame.setTitle("Thrust Curve Iteration");
+
+				// adding it to JScrollPane
+			JScrollPane sp = new JScrollPane(tableData);
+			frame.add(sp);
+				// Frame Size
+			frame.setSize(500, 200);
+				// Frame Visible = true
+			frame.setVisible(true);
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			System.out.print("done");
+
+
+
+			/*double [] delay = {Double.MAX_VALUE};
 			ThrustCurveMotor.Builder builder =  RASPMotorLoader.createRASPMotor("seb", "",
 					"",4.0, 0.2, delay,
 					115, 115.000001, time, thrust, true);
 			ThrustCurveMotor motorTemp = builder.build();
 			simulationConditions.getSimulation().getRocket().getSelectedConfiguration().getActiveMotors().iterator().next().setMotor(motorTemp);
-			simulatedData = simulator.simulate(simulationConditions);
+			simulatedData = simulator.simulate(simulationConditions);*/
 
 			t2 = System.currentTimeMillis();
 			log.debug("Simulation: returning from simulator, simulation took " + (t2 - t1) + "ms");
