@@ -545,7 +545,8 @@ public class BasicEventSimulationEngine implements SimulationEngine {
 						currentStatus.getFlightData().setOptimumAltitude(currentStatus.getMaxAlt());
 						currentStatus.getFlightData().setTimeToOptimumAltitude(currentStatus.getMaxAltTime());
 					}
-					break;
+					return false;
+//					break;
 
 				case RECOVERY_DEVICE_DEPLOYMENT:
 					RocketComponent c = event.getSource();

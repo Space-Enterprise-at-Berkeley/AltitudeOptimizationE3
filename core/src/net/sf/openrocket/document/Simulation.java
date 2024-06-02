@@ -454,16 +454,25 @@ public class Simulation implements ChangeSource, Cloneable {
 			double epsilon = Math.pow(10,-6);
 
 
+			int count = 0;
+			int thres = 30;
 
-			List<Double> finalTC= new ArrayList<>();
-			List<Double> finalIT= new ArrayList<>();
-			List<Double> finalFT= new ArrayList<>();
+			List<Double> finalTC= new ArrayList<>(); //time change
+			List<Double> finalTF  = new ArrayList<>(); //time final
+			List<Double> finalIT= new ArrayList<>(); //initial thrust
+			List<Double> finalFT= new ArrayList<>(); //final thrust
 			List<Double> apogees= new ArrayList<>();
+
+			//first run to 10000
+
+
+			//max burnTime: 50000
+			double countVar = 0;
 			// double maxBurnTime = 1000.0;
-			for (int it=2000;it<=50000;it+=1000){
+			for (int it=2000 ;it<=50000;it+=1000){
 				//System.out.print("it: "+it);
 				//initial thrust values from 2000 to 50,000
-				for (int ft=1000;ft<=it;ft+=100){
+				for (int ft=1000;ft<=it;ft+=200){
 					//System.out.print("ft: "+ft);
 					//final thrust values from 1000 to initial thrust (no change)
 					for (int tc=1;tc<=totalImpulse/it;tc+=1) {
@@ -496,6 +505,7 @@ public class Simulation implements ChangeSource, Cloneable {
 							finalIT.add(initThrust);
 							finalFT.add(newThrust);
 							finalTC.add(timeChange);
+							finalTF.add(finalTime);
 
 
 							double[] delay = {Double.MAX_VALUE};
@@ -504,30 +514,42 @@ public class Simulation implements ChangeSource, Cloneable {
 									115, 115.000001, time, thrust, true);
 							ThrustCurveMotor motorTemp = builder.build();
 							simulationConditions.getSimulation().getRocket().getSelectedConfiguration().getActiveMotors().iterator().next().setMotor(motorTemp);
+
 							simulatedData = simulator.simulate(simulationConditions);
 							apogees.add(simulatedData.getMaxAltitude());
 
 
+							countVar += 1;
+							System.out.println(countVar);
+
 						}
+
+						count++;
+
 					}
+
 				}
+
 
 			}
 			//System.out.print(apogees);
 			int rows=apogees.toArray().length;
-			Object[][] data2DArray = new Object[rows][4];
+			Object[][] data2DArray = new Object[rows][6];
 
 			// Populate the 2D array
 			for (int i = 0; i < rows; i++) {
 				data2DArray[i][0] = finalIT.get(i);
 				data2DArray[i][1] = finalFT.get(i);
 				data2DArray[i][2] = finalTC.get(i);
-				data2DArray[i][3] = apogees.get(i);
+				data2DArray[i][3] = finalTF.get(i);
+				data2DArray[i][4] = apogees.get(i);
+				data2DArray[i][5] = finalIT.get(i)*finalTC.get(i) + (finalTF.get(i)-finalTC.get(i))*finalFT.get(i);
+
 			}
 
 			//System.out.print(data2DArray);
 
-			String[] columnNames= {"Initial Thrust","Final Thrust","Time of Change","Apogee"};
+			String[] columnNames= {"Initial Thrust","Final Thrust","Time of Change","final time", "Apogee", "total impulse"};
 			JTable tableData = new JTable(data2DArray, columnNames);
 			tableData.setBounds(30, 40, 200, 300);
 
