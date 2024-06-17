@@ -10,6 +10,7 @@ import java.util.List;
 import net.sf.openrocket.file.motor.RASPMotorLoader;
 import net.sf.openrocket.motor.MotorConfiguration;
 import net.sf.openrocket.motor.ThrustCurveMotor;
+import net.sf.openrocket.simulation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,15 +22,6 @@ import net.sf.openrocket.masscalc.MassCalculator;
 import net.sf.openrocket.rocketcomponent.FlightConfiguration;
 import net.sf.openrocket.rocketcomponent.FlightConfigurationId;
 import net.sf.openrocket.rocketcomponent.Rocket;
-import net.sf.openrocket.simulation.BasicEventSimulationEngine;
-import net.sf.openrocket.simulation.DefaultSimulationOptionFactory;
-import net.sf.openrocket.simulation.FlightData;
-import net.sf.openrocket.simulation.FlightEvent;
-import net.sf.openrocket.simulation.RK4SimulationStepper;
-import net.sf.openrocket.simulation.SimulationConditions;
-import net.sf.openrocket.simulation.SimulationEngine;
-import net.sf.openrocket.simulation.SimulationOptions;
-import net.sf.openrocket.simulation.SimulationStepper;
 import net.sf.openrocket.simulation.exception.SimulationException;
 import net.sf.openrocket.simulation.extension.SimulationExtension;
 import net.sf.openrocket.simulation.listeners.SimulationListener;
@@ -94,7 +86,7 @@ public class Simulation implements ChangeSource, Cloneable {
 	private ArrayList<SimulationExtension> simulationExtensions = new ArrayList<SimulationExtension>();
 	
 	
-	private final Class<? extends SimulationEngine> simulationEngineClass = BasicEventSimulationEngine.class;
+	private final Class<? extends SimulationEngine> simulationEngineClass = BasicEventSimulationEngineConstantThrust.class;
 	private Class<? extends SimulationStepper> simulationStepperClass = RK4SimulationStepper.class;
 	private Class<? extends AerodynamicCalculator> aerodynamicCalculatorClass = BarrowmanCalculator.class;
 	@SuppressWarnings("unused")
@@ -469,13 +461,13 @@ public class Simulation implements ChangeSource, Cloneable {
 			//max burnTime: 50000
 			double countVar = 0;
 			// double maxBurnTime = 1000.0;
-			for (int it=2000 ;it<=50000;it+=1000){
+			for (int it=2000 ;it<=10000;it+=1500){
 				//System.out.print("it: "+it);
 				//initial thrust values from 2000 to 50,000
-				for (int ft=1000;ft<=it;ft+=200){
+				for (int ft=1000;ft<=it;ft+=500){
 					//System.out.print("ft: "+ft);
 					//final thrust values from 1000 to initial thrust (no change)
-					for (int tc=1;tc<=totalImpulse/it;tc+=1) {
+					for (int tc=1;tc<=totalImpulse/it;tc+=2) {
 						//System.out.print("tc: "+tc);
 						//it*tc will give impulse 1
 						//totalImpulse/it -tc *ft will give impulse 2
@@ -514,17 +506,23 @@ public class Simulation implements ChangeSource, Cloneable {
 									115, 115.000001, time, thrust, true);
 							ThrustCurveMotor motorTemp = builder.build();
 							simulationConditions.getSimulation().getRocket().getSelectedConfiguration().getActiveMotors().iterator().next().setMotor(motorTemp);
+							motorTemp.setExitPressure(0.66);
+
 
 							simulatedData = simulator.simulate(simulationConditions);
 							apogees.add(simulatedData.getMaxAltitude());
 
 
 							countVar += 1;
-							System.out.println(countVar);
+							System.out.println(countVar + " t_i " + initThrust + " time_change " + timeChange + " new thrust " + newThrust + " APOGEE " +  simulatedData.getMaxAltitude());
 
 						}
 
 						count++;
+
+						if(ft == it){
+							break;
+						}
 
 					}
 
